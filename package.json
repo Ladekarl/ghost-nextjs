@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "postinstall": "husky install",
+    "preinstall": "npx only-allow npm",
+    "postinstall": "npx sort-package-json",
     "prepare": "husky"
   },
   "dependencies": {
