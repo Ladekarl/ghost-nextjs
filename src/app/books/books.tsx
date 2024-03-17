@@ -1,0 +1,58 @@
+'use client';
+
+import request from 'graphql-request';
+
+import { graphql } from '@/gql';
+import * as C from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY ?? '';
+
+export const allBooksQueryDocument = graphql(/* GraphQL */ `
+  query allBooksQuery {
+    books {
+      author
+      title
+    }
+  }
+`);
+
+export default function Books() {
+  const { data } = useQuery({
+    queryKey: ['books'],
+    queryFn: async () =>
+      request({
+        url: API_URL,
+        document: allBooksQueryDocument,
+        requestHeaders: {
+          'x-api-key': API_KEY
+        }
+      })
+  });
+
+  return (
+    <C.Box
+      sx={{
+        my: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+    >
+      <C.Grid>
+        {data?.books?.map(book => (
+          <C.Card key={book?.title} sx={{ m: 5, p: 5 }}>
+            <C.Typography variant="body1" component="h1">
+              Title: {book?.title}
+            </C.Typography>
+            <C.Typography variant="body2" component="h1">
+              Author: {book?.author}
+            </C.Typography>
+          </C.Card>
+        ))}
+      </C.Grid>
+    </C.Box>
+  );
+}

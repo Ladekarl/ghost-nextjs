@@ -2,8 +2,7 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "search.exclude": {
-    "**/node_modules": true,
-    "**/src/__generated__": true
+    "**/src/gql": true
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
