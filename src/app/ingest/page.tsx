@@ -1,11 +1,11 @@
 import Container from '@mui/material/Container';
 
-import Chat from './chat';
+import Ingest from './ingest';
 
-export default async function ChatPage() {
+export default async function IngestPage() {
   return (
     <Container>
-      <Chat />
+      <Ingest />
     </Container>
   );
 }

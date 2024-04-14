@@ -5,7 +5,7 @@ import { Resolver, useForm } from 'react-hook-form';
 import { Alert, Box, Button, TextField } from '@mui/material';
 
 export type PromptFormValues = {
-  prompt: string;
+  text: string;
 };
 
 type PromptFormProps = {
@@ -16,10 +16,10 @@ type PromptFormProps = {
 
 const resolver: Resolver<PromptFormValues> = async values => {
   return {
-    values: values.prompt ? values : {},
-    errors: !values.prompt
+    values: values.text ? values : {},
+    errors: !values.text
       ? {
-          prompt: {
+          text: {
             type: 'required',
             message: 'This is required.'
           }
@@ -28,7 +28,7 @@ const resolver: Resolver<PromptFormValues> = async values => {
   };
 };
 
-export default function PromptForm({
+export default function IngestForm({
   onSubmit,
   error,
   disabled
@@ -43,23 +43,16 @@ export default function PromptForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Box
-        sx={{
-          my: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: 1
-        }}
-      >
+      <Box my={4} display="flex" gap={1} flexDirection="column">
         <TextField
-          {...register('prompt')}
-          placeholder="Write your prompt here..."
-          error={!!errors.prompt}
-          helperText={errors.prompt?.message}
+          multiline
+          fullWidth
+          {...register('text')}
+          placeholder="Write your data here..."
+          error={!!errors.text}
+          helperText={errors.text?.message}
         />
-        <Button type="submit" disabled={disabled}>
+        <Button type="submit" variant="contained" disabled={disabled}>
           Submit
         </Button>
         {!!error && <Alert severity="error">{error}</Alert>}

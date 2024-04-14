@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 
-import { Copyright } from '@/components';
 import theme from '@/theme';
 import { ThemeProvider } from '@mui/material';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
@@ -31,9 +30,7 @@ export default function RootLayout({
             <CssBaseline />
             <Providers>
               <section>{children}</section>
-              <section>
-                <Copyright />
-              </section>
+              <section>{/* <Copyright /> */}</section>
             </Providers>
           </ThemeProvider>
         </AppRouterCacheProvider>
