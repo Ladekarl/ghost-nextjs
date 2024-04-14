@@ -3,7 +3,7 @@
 import request from 'graphql-request';
 
 import { graphql } from '@/gql';
-import * as C from '@mui/material';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -32,7 +32,7 @@ export default function Books() {
   });
 
   return (
-    <C.Box
+    <Box
       sx={{
         my: 4,
         display: 'flex',
@@ -41,18 +41,18 @@ export default function Books() {
         alignItems: 'center'
       }}
     >
-      <C.Grid>
+      <Grid>
         {data?.books?.map(book => (
-          <C.Card key={book?.title} sx={{ m: 5, p: 5 }}>
-            <C.Typography variant="body1" component="h1">
+          <Card key={book?.title} sx={{ m: 5, p: 5 }}>
+            <Typography variant="body1" component="h1">
               Title: {book?.title}
-            </C.Typography>
-            <C.Typography variant="body2" component="h1">
+            </Typography>
+            <Typography variant="body2" component="h1">
               Author: {book?.author}
-            </C.Typography>
-          </C.Card>
+            </Typography>
+          </Card>
         ))}
-      </C.Grid>
-    </C.Box>
+      </Grid>
+    </Box>
   );
 }

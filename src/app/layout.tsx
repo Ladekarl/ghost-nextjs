@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 
 import { Copyright } from '@/components';
 import theme from '@/theme';
@@ -11,6 +11,11 @@ import Providers from './providers';
 export const metadata: Metadata = {
   title: 'Ghost App',
   description: 'Conneting to a Ghost Server'
+};
+
+export const viewport: Viewport = {
+  initialScale: 1,
+  width: 'device-width'
 };
 
 export default function RootLayout({

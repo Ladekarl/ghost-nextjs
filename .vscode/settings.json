@@ -2,7 +2,8 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "search.exclude": {
-    "**/src/gql": true
+    "**/src/gql": true,
+    ".yarn": true
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
