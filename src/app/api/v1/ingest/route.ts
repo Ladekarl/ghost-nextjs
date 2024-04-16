@@ -12,8 +12,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const text = body.text;
 
-  console.log(text);
-
   try {
     const client = new Pinecone({ apiKey: PINECONE_API_KEY });
     const pineconeIndex = client.Index(PINECONE_INDEX_NAME);

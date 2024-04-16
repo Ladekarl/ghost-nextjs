@@ -12,6 +12,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ai-sdk/provider-utils@npm:0.0.0":
+  version: 0.0.0
+  resolution: "@ai-sdk/provider-utils@npm:0.0.0"
+  dependencies:
+    "@ai-sdk/provider": "npm:0.0.0"
+    eventsource-parser: "npm:1.1.2"
+    nanoid: "npm:3.3.6"
+    secure-json-parse: "npm:2.7.0"
+  peerDependencies:
+    zod: ^3.0.0
+  peerDependenciesMeta:
+    zod:
+      optional: true
+  checksum: 10c0/6afccfa38678fcc1a3b94e41cb74c05cf947da252a4a95e23629c6b42ad23cec9ab71d5fe63b1f6ccf508d1d2cff174bf48d96e34aaa2f22f12b8cf4b851d2c4
+  languageName: node
+  linkType: hard
+
+"@ai-sdk/provider@npm:0.0.0":
+  version: 0.0.0
+  resolution: "@ai-sdk/provider@npm:0.0.0"
+  dependencies:
+    json-schema: "npm:0.4.0"
+  checksum: 10c0/39afef2de30d244e6b7244825ef3328857d87738c5623edae003f7f6d350c6f75b2592cd03125471ed730007fc24b226bab94d2b38cc33a01be72219ef063858
+  languageName: node
+  linkType: hard
+
 "@ampproject/remapping@npm:^2.2.0":
   version: 2.3.0
   resolution: "@ampproject/remapping@npm:2.3.0"
@@ -2996,7 +3022,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:7.0.15, @types/json-schema@npm:^7.0.12":
+"@types/json-schema@npm:^7.0.12":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: 10c0/a996a745e6c5d60292f36731dd41341339d4eeed8180bb09226e5c8d23759067692b1d88e5d91d72ee83dfc00d3aca8e7bd43ea120516c17922cbcb7c3e252db
@@ -3480,11 +3506,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ai@npm:3.0.19":
-  version: 3.0.19
-  resolution: "ai@npm:3.0.19"
+"ai@npm:^3.0.22":
+  version: 3.0.22
+  resolution: "ai@npm:3.0.22"
   dependencies:
-    "@types/json-schema": "npm:7.0.15"
+    "@ai-sdk/provider": "npm:0.0.0"
+    "@ai-sdk/provider-utils": "npm:0.0.0"
     eventsource-parser: "npm:1.1.2"
     json-schema: "npm:0.4.0"
     jsondiffpatch: "npm:0.6.0"
@@ -3513,7 +3540,7 @@ __metadata:
       optional: true
     zod:
       optional: true
-  checksum: 10c0/9084dd0051e3e936028a8a5815bfc627aab14c93a9dc8109b39293cf567b9f03a58d73337e2e13cca780ee7263d3a89c4511404f2c1375f30c67c8799d1a8989
+  checksum: 10c0/f223c55d56c3b9a863d27345dd95cb8026a428be6e3b92ca3b5e59cc18d315448ddb56d294a644451a997832050b5d230b7d32c29416724382f29c63db7cf61d
   languageName: node
   linkType: hard
 
@@ -7869,7 +7896,7 @@ __metadata:
     "@types/uuid": "npm:^9"
     "@typescript-eslint/eslint-plugin": "npm:^7.2.0"
     "@typescript-eslint/parser": "npm:^7.2.0"
-    ai: "npm:3.0.19"
+    ai: "npm:^3.0.22"
     axios: "npm:^1.6.8"
     cohere-ai: "npm:^7.9.3"
     dotenv: "npm:^16.4.5"

@@ -1,14 +1,18 @@
-import { StreamingTextResponse, Message as VercelChatMessage } from 'ai';
+import {
+  StreamingTextResponse,
+  Message as VercelChatMessage,
+  createStreamDataTransformer
+} from 'ai';
+import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
+import { createRetrieverTool } from 'langchain/tools/retriever';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { CohereEmbeddings } from '@langchain/cohere';
-import { Document } from '@langchain/core/documents';
+import { AIMessage, ChatMessage, HumanMessage } from '@langchain/core/messages';
 import {
-  BytesOutputParser,
-  StringOutputParser
-} from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
-import { RunnableSequence } from '@langchain/core/runnables';
+  ChatPromptTemplate,
+  MessagesPlaceholder
+} from '@langchain/core/prompts';
 import { ChatOpenAI } from '@langchain/openai';
 import { PineconeStore } from '@langchain/pinecone';
 import { Pinecone } from '@pinecone-database/pinecone';
@@ -19,70 +23,42 @@ const PINECONE_API_KEY = process.env.PINECONE_API_KEY!;
 const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME!;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
 
-const combineDocumentsFn = (docs: Document[]) => {
-  const serializedDocs = docs.map(doc => doc.pageContent);
-  return serializedDocs.join('\n\n');
+const convertVercelMessageToLangChainMessage = (message: VercelChatMessage) => {
+  if (message.role === 'user') {
+    return new HumanMessage(message.content);
+  } else if (message.role === 'assistant') {
+    return new AIMessage(message.content);
+  } else {
+    return new ChatMessage(message.content, message.role);
+  }
 };
 
-const formatVercelMessages = (chatHistory: VercelChatMessage[]) => {
-  const formattedDialogueTurns = chatHistory.map(message => {
-    if (message.role === 'user') {
-      return `Human: ${message.content}`;
-    } else if (message.role === 'assistant') {
-      return `Assistant: ${message.content}`;
-    } else {
-      return `${message.role}: ${message.content}`;
-    }
-  });
-  return formattedDialogueTurns.join('\n');
-};
-
-const CONDENSE_QUESTION_TEMPLATE = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
-
-<chat_history>
-  {chat_history}
-</chat_history>
-
-Follow Up Input: {question}
-Standalone question:`;
-
-const condenseQuestionPrompt = PromptTemplate.fromTemplate(
-  CONDENSE_QUESTION_TEMPLATE
-);
-
-const ANSWER_TEMPLATE = `You are an employee at the same company where the person asking the question is working.
-Answer the question based only on the following context and chat history:
-<context>
-  {context}
-</context>
-
-<chat_history>
-  {chat_history}
-</chat_history>
-
-Question: {question}
-`;
-const answerPrompt = PromptTemplate.fromTemplate(ANSWER_TEMPLATE);
+const AGENT_SYSTEM_TEMPLATE = `You are a senior employee working at a big company trying to answer the best way you can.
+If you don't know how to answer a question, use the available tools to look up relevant information.`;
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const messages = body.messages ?? [];
-    const previousMessages = messages.slice(0, -1);
+    /**
+     * We represent intermediate steps as system messages for display purposes,
+     * but don't want them in the chat history.
+     */
+    const messages = (body.messages ?? []).filter(
+      (message: VercelChatMessage) =>
+        message.role === 'user' || message.role === 'assistant'
+    );
+    const returnIntermediateSteps = body.show_intermediate_steps;
+    const previousMessages = messages
+      .slice(0, -1)
+      .map(convertVercelMessageToLangChainMessage);
     const currentMessageContent = messages[messages.length - 1].content;
 
-    const model = new ChatOpenAI({
-      modelName: 'gpt-3.5-turbo-1106',
-      temperature: 0,
+    const chatModel = new ChatOpenAI({
       apiKey: OPENAI_API_KEY,
+      modelName: 'gpt-3.5-turbo-1106',
+      temperature: 0.2,
       streaming: true
     });
-
-    const standaloneQuestionChain = RunnableSequence.from([
-      condenseQuestionPrompt,
-      model,
-      new StringOutputParser()
-    ]);
 
     const pinecone = new Pinecone({ apiKey: PINECONE_API_KEY });
     const pineconeIndex = pinecone.Index(PINECONE_INDEX_NAME);
@@ -94,37 +70,71 @@ export async function POST(req: NextRequest) {
 
     const retriever = vectorstore.asRetriever();
 
-    const retrievalChain = retriever.pipe(combineDocumentsFn);
-
-    const answerChain = RunnableSequence.from([
-      {
-        context: RunnableSequence.from([
-          input => input.question,
-          retrievalChain
-        ]),
-        chat_history: input => input.chat_history,
-        question: input => input.question
-      },
-      answerPrompt,
-      model
-    ]);
-
-    const conversationalRetrievalQAChain = RunnableSequence.from([
-      {
-        question: standaloneQuestionChain,
-        chat_history: input => input.chat_history
-      },
-      answerChain,
-      new BytesOutputParser()
-    ]);
-
-    const stream = await conversationalRetrievalQAChain.stream({
-      question: currentMessageContent,
-      chat_history: formatVercelMessages(previousMessages)
+    const tool = createRetrieverTool(retriever, {
+      name: 'search_vector_database',
+      description: 'Searches and returns information.'
     });
 
-    return new StreamingTextResponse(stream);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ['system', AGENT_SYSTEM_TEMPLATE],
+      new MessagesPlaceholder('chat_history'),
+      ['human', '{input}'],
+      new MessagesPlaceholder('agent_scratchpad')
+    ]);
+
+    const agent = createToolCallingAgent({
+      llm: chatModel,
+      tools: [tool],
+      prompt
+    });
+
+    const agentExecutor = new AgentExecutor({
+      agent,
+      tools: [tool],
+      returnIntermediateSteps
+    });
+
+    if (!returnIntermediateSteps) {
+      const logStream = agentExecutor.streamLog({
+        input: currentMessageContent,
+        chat_history: previousMessages
+      });
+
+      const textEncoder = new TextEncoder();
+      const transformStream = new ReadableStream({
+        async start(controller) {
+          for await (const chunk of logStream) {
+            if (chunk.ops?.length > 0 && chunk.ops[0].op === 'add') {
+              const addOp = chunk.ops[0];
+              if (
+                addOp.path.startsWith('/logs/ChatOpenAI') &&
+                typeof addOp.value === 'string' &&
+                addOp.value.length
+              ) {
+                controller.enqueue(textEncoder.encode(addOp.value));
+              }
+            }
+          }
+          controller.close();
+        }
+      });
+
+      return new StreamingTextResponse(
+        transformStream.pipeThrough(createStreamDataTransformer())
+      );
+    } else {
+      const result = await agentExecutor.invoke({
+        input: currentMessageContent,
+        chat_history: previousMessages
+      });
+
+      return NextResponse.json(
+        { output: result.output, intermediate_steps: result.intermediateSteps },
+        { status: 200 }
+      );
+    }
   } catch (e: any) {
+    console.log(e);
     return NextResponse.json({ error: e.message }, { status: e.status ?? 500 });
   }
 }

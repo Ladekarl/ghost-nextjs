@@ -27,7 +27,7 @@
     "@pinecone-database/pinecone": "^2.2.0",
     "@tanstack/react-query": "^5.28.4",
     "@tanstack/react-query-devtools": "^5.28.4",
-    "ai": "3.0.19",
+    "ai": "^3.0.22",
     "axios": "^1.6.8",
     "cohere-ai": "^7.9.3",
     "dotenv": "^16.4.5",
